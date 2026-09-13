@@ -1,0 +1,1 @@
+-keep class com.crmp.mobile.client.NativeClient { *; }
