@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CRMP Mobile</string>
+    <string name="download_cache">Скачать кэш</string>
+    <string name="download_cancel">Отмена</string>
+    <string name="cache_status_ready">Статус: скачан</string>
+    <string name="cache_status_missing">Статус: не скачан</string>
 </resources>

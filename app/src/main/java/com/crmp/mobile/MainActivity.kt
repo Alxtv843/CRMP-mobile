@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
 private fun CrMpApp(vm: AppViewModel) {
     // collectAsState for max OEM compatibility (avoids lifecycle-runtime-compose edge cases).
     val state by vm.uiState.collectAsState()
+    val downloadState by vm.downloadState.collectAsState()
+    val cacheStatus by vm.cacheStatus.collectAsState()
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val current = backStack?.destination?.route ?: Dest.Home.route
@@ -85,8 +87,12 @@ private fun CrMpApp(vm: AppViewModel) {
             composable(Dest.Home.route) {
                 HomeScreen(
                     state = state,
+                    downloadState = downloadState,
+                    cacheStatus = cacheStatus,
                     onLaunch = vm::launchGame,
                     onOpenServers = { navController.navigate(Dest.Servers.route) },
+                    onDownloadCache = vm::startCacheDownload,
+                    onCancelDownload = vm::cancelCacheDownload,
                 )
             }
             composable(Dest.Servers.route) {
@@ -101,9 +107,13 @@ private fun CrMpApp(vm: AppViewModel) {
             composable(Dest.Settings.route) {
                 SettingsScreen(
                     state = state,
+                    downloadState = downloadState,
+                    cacheStatus = cacheStatus,
                     onSaveNickname = vm::setNickname,
                     onSaveCacheUrl = vm::setCacheUrl,
                     onSaveDataUrl = vm::setDataUrl,
+                    onDownloadCache = { url -> vm.startCacheDownload(url) },
+                    onCancelDownload = vm::cancelCacheDownload,
                 )
             }
             composable(Dest.About.route) {

@@ -32,7 +32,7 @@ fun AboutScreen() {
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            "Версия 0.1.0 (scaffold)",
+            "Версия 0.1.4",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

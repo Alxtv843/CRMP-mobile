@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
@@ -22,17 +24,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crmp.mobile.download.CacheStatus
+import com.crmp.mobile.download.DownloadState
+import com.crmp.mobile.ui.components.CacheDownloadCard
 import com.crmp.mobile.viewmodel.AppUiState
 
 @Composable
 fun HomeScreen(
     state: AppUiState,
+    downloadState: DownloadState,
+    cacheStatus: CacheStatus,
     onLaunch: () -> Unit,
     onOpenServers: () -> Unit,
+    onDownloadCache: () -> Unit,
+    onCancelDownload: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -94,7 +104,13 @@ fun HomeScreen(
             Text("Выбрать сервер")
         }
 
-        Spacer(Modifier.weight(1f))
+        CacheDownloadCard(
+            downloadState = downloadState,
+            cacheStatus = cacheStatus,
+            onDownload = onDownloadCache,
+            onCancel = onCancelDownload,
+        )
+
         Text(
             text = "Игровые данные GTA SA не входят в приложение. Укажите свой легальный кэш в настройках.",
             style = MaterialTheme.typography.bodySmall,

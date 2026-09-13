@@ -23,14 +23,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crmp.mobile.download.CacheStatus
+import com.crmp.mobile.download.DownloadState
+import com.crmp.mobile.ui.components.CacheDownloadCard
 import com.crmp.mobile.viewmodel.AppUiState
 
 @Composable
 fun SettingsScreen(
     state: AppUiState,
+    downloadState: DownloadState,
+    cacheStatus: CacheStatus,
     onSaveNickname: (String) -> Unit,
     onSaveCacheUrl: (String) -> Unit,
     onSaveDataUrl: (String) -> Unit,
+    onDownloadCache: (url: String) -> Unit,
+    onCancelDownload: () -> Unit,
 ) {
     var nick by remember { mutableStateOf(state.nickname) }
     var cache by remember { mutableStateOf(state.cacheUrl) }
@@ -70,13 +77,14 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(8.dp))
         Text(
-            "Кэш / данные (плейсхолдеры)",
+            "Кэш / данные",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            "Укажите URL, с которых лаунчер сможет скачать ваш легальный кэш. " +
-                "Скачивание пока не реализовано — только сохранение настроек.",
+            "Укажите HTTPS/HTTP URL вашего легального кэша (например cache.zip). " +
+                "По умолчанию — плейсхолдеры example.com; разместите файлы на своём хостинге. " +
+                "Приложение не распространяет ассеты GTA SA.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -94,6 +102,16 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Сохранить URL кэша") }
 
+        CacheDownloadCard(
+            downloadState = downloadState,
+            cacheStatus = cacheStatus,
+            onDownload = {
+                onSaveCacheUrl(cache)
+                onDownloadCache(cache)
+            },
+            onCancel = onCancelDownload,
+        )
+
         OutlinedTextField(
             value = data,
             onValueChange = { data = it },
@@ -106,5 +124,11 @@ fun SettingsScreen(
             onClick = { onSaveDataUrl(data) },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Сохранить URL данных") }
+        Text(
+            "URL данных сохраняется для будущего использования клиентом; " +
+                "кнопка «Скачать кэш» использует URL кэша выше.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

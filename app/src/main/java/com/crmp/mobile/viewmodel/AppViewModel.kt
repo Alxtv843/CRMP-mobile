@@ -7,9 +7,15 @@ import androidx.lifecycle.viewModelScope
 import com.crmp.mobile.client.NativeClient
 import com.crmp.mobile.data.PreferencesRepository
 import com.crmp.mobile.data.ServerRepository
+import com.crmp.mobile.download.CacheDownloader
+import com.crmp.mobile.download.CacheStatus
+import com.crmp.mobile.download.DownloadState
 import com.crmp.mobile.model.Server
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,6 +43,15 @@ class AppViewModel(appContext: Context) : ViewModel() {
     private val appContext = appContext.applicationContext
     private val prefs = PreferencesRepository(this.appContext)
     private val serversRepo = ServerRepository(this.appContext)
+    private val cacheDownloader = CacheDownloader(this.appContext)
+
+    private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
+    val downloadState: StateFlow<DownloadState> = _downloadState.asStateFlow()
+
+    private val _cacheStatus = MutableStateFlow(cacheDownloader.localStatus())
+    val cacheStatus: StateFlow<CacheStatus> = _cacheStatus.asStateFlow()
+
+    private var downloadJob: Job? = null
 
     val uiState: StateFlow<AppUiState> = combine(
         prefs.nickname,
@@ -71,6 +86,57 @@ class AppViewModel(appContext: Context) : ViewModel() {
 
     fun removeServer(id: String) = viewModelScope.launch { serversRepo.remove(id) }
     fun toggleFavorite(id: String) = viewModelScope.launch { serversRepo.toggleFavorite(id) }
+
+    fun refreshCacheStatus() {
+        _cacheStatus.value = cacheDownloader.localStatus()
+    }
+
+    fun startCacheDownload(urlOverride: String? = null) {
+        if (downloadJob?.isActive == true) return
+        val url = (urlOverride ?: uiState.value.cacheUrl).trim()
+        if (url.isBlank()) {
+            _downloadState.value = DownloadState.Error("URL кэша не указан. Задайте его в настройках.")
+            return
+        }
+        // Persist override so Home/Settings stay in sync
+        if (urlOverride != null) {
+            viewModelScope.launch { prefs.setCacheUrl(url) }
+        }
+        downloadJob = viewModelScope.launch {
+            _downloadState.value = DownloadState.Running(0L, -1L, -1)
+            val result = cacheDownloader.downloadCancellable(url) { read, total ->
+                val percent = if (total > 0) {
+                    ((read * 100) / total).toInt().coerceIn(0, 100)
+                } else {
+                    -1
+                }
+                _downloadState.value = DownloadState.Running(read, total, percent)
+            }
+            result.fold(
+                onSuccess = { path ->
+                    _downloadState.value = DownloadState.Success(path)
+                    _cacheStatus.value = cacheDownloader.localStatus()
+                    toast("Кэш скачан")
+                },
+                onFailure = { e ->
+                    _downloadState.value = DownloadState.Error(
+                        e.message ?: "Ошибка загрузки",
+                    )
+                },
+            )
+        }
+        downloadJob?.invokeOnCompletion { cause ->
+            if (cause is kotlinx.coroutines.CancellationException) {
+                _downloadState.value = DownloadState.Error("Загрузка отменена")
+                _cacheStatus.value = cacheDownloader.localStatus()
+            }
+        }
+    }
+
+    fun cancelCacheDownload() {
+        downloadJob?.cancel()
+        downloadJob = null
+    }
 
     fun launchGame() {
         val state = uiState.value
