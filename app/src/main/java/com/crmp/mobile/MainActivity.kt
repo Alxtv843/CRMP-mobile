@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -37,16 +38,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Safe composition path: theme + AndroidViewModel factory so Application-backed VMs always resolve.
         setContent {
             CRMPTheme {
-                CrMpApp()
+                CrMpApp(
+                    vm = viewModel(
+                        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application),
+                    ),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CrMpApp(vm: AppViewModel = viewModel()) {
+private fun CrMpApp(vm: AppViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
@@ -110,7 +116,7 @@ private fun CrMpApp(vm: AppViewModel = viewModel()) {
 
 private fun iconFor(dest: Dest): ImageVector = when (dest) {
     Dest.Home -> Icons.Default.Home
-    Dest.Servers -> Icons.AutoMirrored.Filled.List
+    Dest.Servers -> Icons.Default.List
     Dest.Settings -> Icons.Default.Settings
     Dest.About -> Icons.Default.Info
 }

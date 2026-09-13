@@ -14,12 +14,27 @@ object NativeClient {
     const val RESULT_INVALID_ARGS = 2
     const val RESULT_NATIVE_ERROR = 3
 
-    private val libraryLoaded: Boolean = try {
-        System.loadLibrary("crmp_client")
-        true
-    } catch (t: Throwable) {
-        // Allows unit tests / JVM hosts without .so
-        false
+    @Volatile
+    private var libraryLoaded: Boolean? = null
+
+    /**
+     * Lazily load the native library inside call sites — never during object init —
+     * so a missing/unloadable .so cannot crash the process at class load time.
+     */
+    private fun ensureLibraryLoaded(): Boolean {
+        libraryLoaded?.let { return it }
+        return synchronized(this) {
+            libraryLoaded?.let { return it }
+            val ok = try {
+                System.loadLibrary("crmp_client")
+                true
+            } catch (t: Throwable) {
+                // Allows unit tests / JVM hosts / devices without matching ABI .so
+                false
+            }
+            libraryLoaded = ok
+            ok
+        }
     }
 
     /**
@@ -30,8 +45,12 @@ object NativeClient {
     @JvmStatic
     fun launch(server: String, nick: String): Int {
         if (server.isBlank() || nick.isBlank()) return RESULT_INVALID_ARGS
-        if (!libraryLoaded) return RESULT_NOT_IMPLEMENTED
-        return nativeLaunch(server, nick)
+        if (!ensureLibraryLoaded()) return RESULT_NOT_IMPLEMENTED
+        return try {
+            nativeLaunch(server, nick)
+        } catch (t: Throwable) {
+            RESULT_NATIVE_ERROR
+        }
     }
 
     /**
@@ -39,8 +58,12 @@ object NativeClient {
      */
     @JvmStatic
     fun nativeVersion(): String {
-        if (!libraryLoaded) return "jvm-stub"
-        return nativeGetVersion()
+        if (!ensureLibraryLoaded()) return "jvm-stub"
+        return try {
+            nativeGetVersion()
+        } catch (t: Throwable) {
+            "native-error"
+        }
     }
 
     private external fun nativeLaunch(server: String, nick: String): Int
