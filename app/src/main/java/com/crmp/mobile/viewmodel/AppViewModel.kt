@@ -1,8 +1,8 @@
 package com.crmp.mobile.viewmodel
 
-import android.app.Application
+import android.content.Context
 import android.widget.Toast
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crmp.mobile.client.NativeClient
 import com.crmp.mobile.data.PreferencesRepository
@@ -28,10 +28,15 @@ data class AppUiState(
     val favorites: List<Server> get() = servers.filter { it.isFavorite }
 }
 
-class AppViewModel(application: Application) : AndroidViewModel(application) {
+/**
+ * Plain [ViewModel] — Application/Context injected via [AppViewModelFactory].
+ * Avoids AndroidViewModel + enableEdgeToEdge OEM crash paths on MIUI.
+ */
+class AppViewModel(appContext: Context) : ViewModel() {
 
-    private val prefs = PreferencesRepository(application)
-    private val serversRepo = ServerRepository(application)
+    private val appContext = appContext.applicationContext
+    private val prefs = PreferencesRepository(this.appContext)
+    private val serversRepo = ServerRepository(this.appContext)
 
     val uiState: StateFlow<AppUiState> = combine(
         prefs.nickname,
@@ -86,6 +91,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun toast(text: String) {
-        Toast.makeText(getApplication(), text, Toast.LENGTH_SHORT).show()
+        Toast.makeText(appContext, text, Toast.LENGTH_SHORT).show()
     }
 }

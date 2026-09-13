@@ -81,7 +81,7 @@ fun HomeScreen(
             shape = RoundedCornerShape(14.dp),
             enabled = state.selectedServer != null,
         ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
+            Icon(Icons.Filled.PlayArrow, contentDescription = null)
             Spacer(Modifier.padding(4.dp))
             Text("Играть", style = MaterialTheme.typography.titleMedium)
         }

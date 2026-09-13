@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -101,7 +100,7 @@ fun ServersScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Добавить сервер")
+            Icon(Icons.Filled.Add, contentDescription = "Добавить сервер")
         }
     }
 
@@ -157,14 +156,14 @@ private fun ServerCard(
             }
             IconButton(onClick = onToggleFavorite) {
                 Icon(
-                    imageVector = if (server.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+                    imageVector = Icons.Filled.Star,
                     contentDescription = "Избранное",
                     tint = if (server.isFavorite) MaterialTheme.colorScheme.tertiary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = "Удалить")
+                Icon(Icons.Filled.Delete, contentDescription = "Удалить")
             }
         }
     }

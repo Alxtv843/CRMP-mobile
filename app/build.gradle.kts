@@ -11,8 +11,8 @@ android {
         applicationId = "com.crmp.mobile"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -59,6 +59,6 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
+    // material-icons-core only (via material3) — avoid extended/AutoMirrored NoSuchFieldError on OEM
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
